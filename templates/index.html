@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chess RL Live Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #board { margin-top: 20px; }
+        table { border-collapse: collapse; }
+        td { width: 60px; height: 60px; text-align: center; vertical-align: middle; font-size: 36px; }
+        .light { background-color: #f0d9b5; }
+        .dark { background-color: #b58863; }
+    </style>
+</head>
+<body>
+    <h1>Chess RL Live Game</h1>
+    <button id="startBtn">Start Game</button>
+    <div id="game-info">
+        <p>Game: <span id="game-number">0</span> / 10</p>
+        <p>Result: <span id="game-result"></span></p>
+    </div>
+    <div id="board"></div>
+    <script>
+        // Mapping from FEN pieces to Unicode chess symbols
+        const pieceUnicode = {
+            'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
+            'p': '♟︎', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
+        };
+
+        function renderBoard(fen) {
+            // FEN format: the first part is the piece placement
+            let boardStr = fen.split(" ")[0];
+            let rows = boardStr.split("/");
+            let boardHTML = '<table>';
+            for (let i = 0; i < rows.length; i++) {
+                boardHTML += '<tr>';
+                let row = rows[i];
+                let colIndex = 0;
+                for (let char of row) {
+                    if (isNaN(char)) {
+                        boardHTML += `<td class="${((i+colIndex)%2==0) ? 'light' : 'dark'}">${pieceUnicode[char] || ''}</td>`;
+                        colIndex++;
+                    } else {
+                        let emptySquares = parseInt(char);
+                        for (let k = 0; k < emptySquares; k++) {
+                            boardHTML += `<td class="${((i+colIndex)%2==0) ? 'light' : 'dark'}"></td>`;
+                            colIndex++;
+                        }
+                    }
+                }
+                boardHTML += '</tr>';
+            }
+            boardHTML += '</table>';
+            document.getElementById('board').innerHTML = boardHTML;
+        }
+
+        async function fetchState() {
+            const response = await fetch('http://localhost:9000/state');
+            const data = await response.json();
+            document.getElementById('game-number').innerText = data.game_number;
+            if (data.result) {
+                document.getElementById('game-result').innerText = data.result;
+            }
+            if (data.fen) {
+                renderBoard(data.fen);
+            }
+        }
+
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            await fetch('http://localhost:9000/startgame', { method: 'POST' });
+        });
+
+        setInterval(fetchState, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+import tkinter as tk
+import chess
+import chess.svg
+import cairosvg
+from io import BytesIO
+
+# Initialize the chess board
+board = chess.Board()
+
+# Generate SVG representation of the chessboard
+def generate_svg(board):
+    return chess.svg.board(board)
+
+# Convert the SVG to a format Tkinter can use (PNG)
+def svg_to_photoimage(svg_str):
+    # Convert the SVG to PNG format
+    png_data = cairosvg.svg2png(bytestring=svg_str.encode('utf-8'))
+    
+    # Convert PNG data to Tkinter PhotoImage
+    return tk.PhotoImage(data=png_data)
+
+# Create the main window
+root = tk.Tk()
+root.title("Chess Game")
+
+# Create a canvas to display the chessboard
+canvas = tk.Canvas(root, width=400, height=400)
+canvas.pack()
+
+# Generate the SVG for the board
+svg_board = generate_svg(board)
+
+# Convert the SVG to a Tkinter PhotoImage object
+photo = svg_to_photoimage(svg_board)
+
+# Display the image on the canvas
+canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+
+# Run the Tkinter event loop
+root.mainloop()
